@@ -1,0 +1,2 @@
+scopes, alternatives and field settings should also be in a fold out panel like the actions
+the auto update toggle is too small make it 10 times broader. 

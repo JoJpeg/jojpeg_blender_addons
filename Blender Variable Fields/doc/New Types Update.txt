@@ -1,0 +1,14 @@
+We need to support a bigger stack of types. 
+
+Boolean
+Vectors (3d), 
+Rotation (Euler & Quaterinon), 
+Data Blocks (Action, Mesh, Font, Object Refrence, Scene Refrence ..., what ever you can also pick when creating a custom property with the Data Block type)
+
+with this we also need to introduce more in depth auto type conversion
+int -> float (vice versa)
+int/float -> vec3/rot
+string -> number
+
+This update also adds some predefined evaluation scripts
+The user can select those from a presets list. Here we will use the same UI/UX as in the action creation and add a "Load Predefiend Evaluation" button with the preset icon next to the eval_script text selector. 
