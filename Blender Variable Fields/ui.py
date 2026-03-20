@@ -1,5 +1,5 @@
 import bpy
-from .properties import get_active_scope, migrate_legacy_data_to_scopes
+from .properties import get_active_scope
 
 
 class VF_UL_ScopesList(bpy.types.UIList):
@@ -41,9 +41,6 @@ class VIEW3D_PT_VariableFieldsPanel(bpy.types.Panel):
         if not vf_settings.is_active:
             layout.operator("variable_fields.activate", text="Activate Variable Fields")
             return
-
-        # Auto-migrate legacy data if file was saved with old version
-        migrate_legacy_data_to_scopes(vf_settings)
         
         # Ensure at least one scope exists (safety fallback)
         if len(vf_settings.scopes) == 0:
@@ -181,8 +178,15 @@ class VIEW3D_PT_VariableFieldsFieldSettingsPanel(bpy.types.Panel):
                 row.operator("variable_fields.remove_field", text="", icon='X').index = i
                 # Field properties
                 box.prop(field, "type")
+                # Show datablock type selector when type is DATABLOCK
+                if field.type == 'DATABLOCK':
+                    box.prop(field, "datablock_type")
                 box.prop(field, "data_path")
-                box.prop(field, "eval_script", text="Custom Eval")
+                # Evaluation script with load predefined button
+                row = box.row(align=True)
+                row.prop(field, "eval_script", text="Custom Eval")
+                op = row.operator("variable_fields.load_predefined_evaluation", text="", icon='PRESET')
+                op.field_index = i
         else:
             if len(scope.alternatives) > 0:
                 alt = scope.alternatives[scope.active_alternative_index]
@@ -201,12 +205,65 @@ class VIEW3D_PT_VariableFieldsFieldSettingsPanel(bpy.types.Panel):
                             row.prop(field_val, 'value_int', text="")
                         elif field_def.type == 'FLOAT':
                             row.prop(field_val, 'value_float', text="")
+                        elif field_def.type == 'BOOL':
+                            row.prop(field_val, 'value_bool', text="")
                         elif field_def.type == 'STRING':
                             row.prop(field_val, 'value_string', text="")
-                        elif field_def.type == 'IMAGE':
-                            row.template_ID(field_val, 'value_image', open='image.open')
+                        elif field_def.type == 'VECTOR':
+                            row.prop(field_val, 'value_vector', text="")
+                        elif field_def.type == 'EULER':
+                            row.prop(field_val, 'value_euler', text="")
+                        elif field_def.type == 'QUATERNION':
+                            row.prop(field_val, 'value_quaternion', text="")
                         elif field_def.type == 'COLOR':
                             row.prop(field_val, 'value_color', text="")
+                        elif field_def.type == 'IMAGE':
+                            row.template_ID(field_val, 'value_image', open='image.open')
+                        elif field_def.type == 'DATABLOCK':
+                            # Show appropriate datablock picker based on datablock_type
+                            db_type = field_def.datablock_type
+                            if db_type == 'OBJECT':
+                                row.prop_search(field_val, 'value_object', context.scene, 'objects', text="")
+                            elif db_type == 'MESH':
+                                row.prop_search(field_val, 'value_mesh', bpy.data, 'meshes', text="")
+                            elif db_type == 'CURVE':
+                                row.prop_search(field_val, 'value_curve', bpy.data, 'curves', text="")
+                            elif db_type == 'CAMERA':
+                                row.prop_search(field_val, 'value_camera', bpy.data, 'cameras', text="")
+                            elif db_type == 'LIGHT':
+                                row.prop_search(field_val, 'value_light', bpy.data, 'lights', text="")
+                            elif db_type == 'MATERIAL':
+                                row.prop_search(field_val, 'value_material', bpy.data, 'materials', text="")
+                            elif db_type == 'TEXTURE':
+                                row.prop_search(field_val, 'value_texture', bpy.data, 'textures', text="")
+                            elif db_type == 'ARMATURE':
+                                row.prop_search(field_val, 'value_armature', bpy.data, 'armatures', text="")
+                            elif db_type == 'ACTION':
+                                row.prop_search(field_val, 'value_action', bpy.data, 'actions', text="")
+                            elif db_type == 'COLLECTION':
+                                row.prop_search(field_val, 'value_collection', bpy.data, 'collections', text="")
+                            elif db_type == 'WORLD':
+                                row.prop_search(field_val, 'value_world', bpy.data, 'worlds', text="")
+                            elif db_type == 'SCENE':
+                                row.prop_search(field_val, 'value_scene', bpy.data, 'scenes', text="")
+                            elif db_type == 'NODE_TREE':
+                                row.prop_search(field_val, 'value_node_tree', bpy.data, 'node_groups', text="")
+                            elif db_type == 'GREASE_PENCIL':
+                                row.prop_search(field_val, 'value_grease_pencil', bpy.data, 'grease_pencils', text="")
+                            elif db_type == 'MOVIE_CLIP':
+                                row.prop_search(field_val, 'value_movie_clip', bpy.data, 'movieclips', text="")
+                            elif db_type == 'SOUND':
+                                row.prop_search(field_val, 'value_sound', bpy.data, 'sounds', text="")
+                            elif db_type == 'TEXT':
+                                row.prop_search(field_val, 'value_text', bpy.data, 'texts', text="")
+                            elif db_type == 'VOLUME':
+                                row.prop_search(field_val, 'value_volume', bpy.data, 'volumes', text="")
+                            elif db_type == 'LATTICE':
+                                row.prop_search(field_val, 'value_lattice', bpy.data, 'lattices', text="")
+                            elif db_type == 'LIGHT_PROBE':
+                                row.prop_search(field_val, 'value_light_probe', bpy.data, 'lightprobes', text="")
+                            elif db_type == 'CACHE_FILE':
+                                row.prop_search(field_val, 'value_cache_file', bpy.data, 'cache_files', text="")
 
 
 class VIEW3D_PT_VariableFieldsActionsPanel(bpy.types.Panel):

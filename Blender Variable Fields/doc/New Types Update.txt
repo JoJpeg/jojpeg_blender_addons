@@ -1,14 +1,28 @@
 We need to support a bigger stack of types. 
 
 Boolean
-Vectors (3d), 
-Rotation (Euler & Quaterinon), 
-Data Blocks (Action, Mesh, Font, Object Refrence, Scene Refrence ..., what ever you can also pick when creating a custom property with the Data Block type)
+Vectors (3d) -> defaults to 0,0,0
+Rotation (Euler & Quaterinon), -> defaults to 0,0,0(,0)
+Data Blocks (when selected, adds another dropdown to select from types) -> defaults to null
 
-with this we also need to introduce more in depth auto type conversion
+Technically, we could target any bpy.types.ID subclass.
+In practice, the most important datablock types include:
+Object, Mesh, Curve, Camera, Light, Material, Texture, (not Image)
+Armature, Action, Collection, World, Scene, NodeTree (Shader, Geometry, Compositor)
+Grease Pencil data, MovieClip, Sound, Text (Text datablock), Volume
+Lattice, Light Probe, CacheFile
+but generally anything that lives in bpy.data.*.
+
+Important: the "Image" datablock only references images that are already in the file, so we our current image type that allows for loading images from disk. 
+
+For the UI we will add Icons to the dropdown, where possible.
+
+with this we also need to introduce more in-depth auto type conversion
 int -> float (vice versa)
 int/float -> vec3/rot
 string -> number
 
 This update also adds some predefined evaluation scripts
-The user can select those from a presets list. Here we will use the same UI/UX as in the action creation and add a "Load Predefiend Evaluation" button with the preset icon next to the eval_script text selector. 
+The user can select those from a presets list. Here we will use the same UI/UX as in the action creation and add a "Load Predefiend Evaluation" button with the preset icon next to the eval_script text selector. we add some predefined evaluations to start with: "vf_clamp_01", "vf_string_to_lowercase", "vf_color_to_colorcode_hex_string"
+
+Backwards compatibility: projects with existing data structures need to be able to mirgrate into the new types if there is any change needed on existing data types. 

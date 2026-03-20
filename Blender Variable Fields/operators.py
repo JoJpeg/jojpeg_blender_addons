@@ -6,6 +6,40 @@ from .properties import get_active_scope, migrate_legacy_data_to_scopes
 # Path to predefined action scripts
 PREDEFINED_ACTIONS_DIR = os.path.join(os.path.dirname(__file__), "predefined_actions")
 
+# Path to predefined evaluation scripts
+PREDEFINED_EVALUATIONS_DIR = os.path.join(os.path.dirname(__file__), "predefined_evaluations")
+
+
+def get_predefined_evaluations():
+    """Load predefined evaluation scripts from the predefined_evaluations folder."""
+    evaluations = {}
+    if os.path.isdir(PREDEFINED_EVALUATIONS_DIR):
+        for filename in os.listdir(PREDEFINED_EVALUATIONS_DIR):
+            if filename.endswith('.py') and not filename.startswith('__'):
+                filepath = os.path.join(PREDEFINED_EVALUATIONS_DIR, filename)
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    # Use vf_eval_ prefix for internal text blocks
+                    text_name = filename.replace('.py', '')
+                    evaluations[text_name] = {
+                        'content': f.read(),
+                        'filepath': filepath,
+                        'filename': filename,
+                    }
+    return evaluations
+
+
+def get_predefined_evaluation_items(self, context):
+    """Generate enum items for predefined evaluations dropdown."""
+    items = []
+    evaluations = get_predefined_evaluations()
+    for text_name, data in sorted(evaluations.items()):
+        # Create human-readable name from filename
+        display_name = data['filename'].replace('_', ' ').replace('.py', '').replace('vf ', '').title()
+        items.append((text_name, display_name, f"Load {display_name} evaluation script"))
+    if not items:
+        items.append(('NONE', "No predefined evaluations", ""))
+    return items
+
 
 def get_predefined_actions():
     """Load predefined action scripts from the predefined_actions folder."""
@@ -78,6 +112,56 @@ class VF_LoadPredefinedActionOperator(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "action_id", text="")
+
+
+class VF_LoadPredefinedEvaluationOperator(bpy.types.Operator):
+    bl_idname = "variable_fields.load_predefined_evaluation"
+    bl_label = "Load Predefined Evaluation"
+    bl_description = "Load a predefined evaluation script for field processing"
+    
+    evaluation_id: bpy.props.EnumProperty(
+        name="Predefined Evaluation",
+        description="Select a predefined evaluation to load",
+        items=get_predefined_evaluation_items,
+    )
+    
+    # Index of the field to assign the evaluation to
+    field_index: bpy.props.IntProperty(default=-1)
+
+    def execute(self, context):
+        if self.evaluation_id == 'NONE':
+            self.report({'WARNING'}, "No predefined evaluations available")
+            return {'CANCELLED'}
+        
+        evaluations = get_predefined_evaluations()
+        if self.evaluation_id not in evaluations:
+            self.report({'ERROR'}, f"Evaluation '{self.evaluation_id}' not found")
+            return {'CANCELLED'}
+        
+        # Load the script into Blender's text blocks
+        if self.evaluation_id not in bpy.data.texts:
+            text = bpy.data.texts.new(self.evaluation_id)
+            text.write(evaluations[self.evaluation_id]['content'])
+            self.report({'INFO'}, f"Loaded '{self.evaluation_id}'")
+        else:
+            text = bpy.data.texts[self.evaluation_id]
+            self.report({'INFO'}, f"'{self.evaluation_id}' already loaded")
+        
+        # If a field index was provided, assign the script to that field
+        if self.field_index >= 0:
+            vf_settings = context.scene.variable_fields
+            scope = get_active_scope(vf_settings)
+            if scope and self.field_index < len(scope.field_definitions):
+                scope.field_definitions[self.field_index].eval_script = text
+        
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "evaluation_id", text="")
 
 
 class VF_ActivateOperator(bpy.types.Operator):
@@ -677,6 +761,7 @@ classes = (
     VF_ActivateOperator,
     VF_DeactivateOperator,
     VF_LoadPredefinedActionOperator,
+    VF_LoadPredefinedEvaluationOperator,
     VF_AddAlternativeOperator,
     VF_RemoveAlternativeOperator,
     VF_MoveAlternativeOperator,
