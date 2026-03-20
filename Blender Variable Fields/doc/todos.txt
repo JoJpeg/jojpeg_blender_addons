@@ -1,0 +1,9 @@
+Scopes:
+A wrapper over the full Alternatives Data structure, which allows to have multiple alternating scopes. We already have one single scope in the current version: A scope holds alternatives and fields and (scope) actions. Now we will have the option for multiple of those.
+This is useful for example when you have different versions of a foreground Scene and different versions of background scene that you want to interchange. 
+
+Visually, scopes will live in a UIList similar to the Alternatives list. This list will be the first panel. before the Alternatives List. By default there will be one scope (named "Scope"). When a scope is selected, the panels below change to display the scopes Alternatives List, Fields and Scope Actions of the selected Scope. 
+
+With this update we also introduce the ability to add General Actions that are not related to a scope. For example "Render All" is an action that would not make sense inside a scope. This will add a "Add Action" button to the General Actions panel when in devmode. Here we can add actions that will remain there regardless of the selected scope. 
+
+The current "General Actions" should be moved to a "Settings" Tab. The Update button should have a little ↻ toggle to the right instead of the "Auto Update" button. 
