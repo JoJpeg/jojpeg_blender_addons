@@ -36,6 +36,8 @@ KEYMAP_SPECS = [
 	("Image Paint", "EMPTY", "WINDOW"),
 	("Grease Pencil", "EMPTY", "WINDOW"),
 	("Grease Pencil Stroke Edit Mode", "EMPTY", "WINDOW"),
+	("Sequencer", "SEQUENCE_EDITOR", "WINDOW"),
+	("SequencerPreview", "SEQUENCE_EDITOR", "WINDOW"),
 	("SequencerCommon", "SEQUENCE_EDITOR", "WINDOW"),
 ]
 
@@ -203,6 +205,7 @@ class HOLDHIDE_OT_modal_hide(bpy.types.Operator):
 			return
 		space_map = {
 			"VIEW_3D": bpy.types.SpaceView3D,
+			"IMAGE_EDITOR": bpy.types.SpaceImageEditor,
 			"SEQUENCE_EDITOR": bpy.types.SpaceSequenceEditor,
 		}
 		space_cls = space_map.get(context.area.type)
@@ -221,6 +224,7 @@ class HOLDHIDE_OT_modal_hide(bpy.types.Operator):
 			return
 		space_map = {
 			"VIEW_3D": bpy.types.SpaceView3D,
+			"IMAGE_EDITOR": bpy.types.SpaceImageEditor,
 			"SEQUENCE_EDITOR": bpy.types.SpaceSequenceEditor,
 		}
 		space_cls = space_map.get(self._draw_space_type)
