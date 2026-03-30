@@ -1,0 +1,2 @@
+## HoldHide 
+This addon is made to prevent accidentally hiding objects by fat-fingering when trying to hit "G". Instead you need to hold H for a little while to make to actually Hide the object. A little visual indicator will pop up to let you know. Currently it is Red because i want to train myself to not hit H, but you can set color and size in the preferences.
