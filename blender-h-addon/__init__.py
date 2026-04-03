@@ -129,6 +129,14 @@ def execute_native_hide(context):
 	return _poll_and_call("object.hide_view_set", unselected=False)
 
 
+def _is_text_edit_context(context):
+	# Do not intercept typing while editing Text objects or inside Blender's Text Editor.
+	if context.mode == "EDIT_TEXT":
+		return True
+	area = context.area.type if context.area else ""
+	return area == "TEXT_EDITOR"
+
+
 def _draw_circle_2d(shader, center, radius, color, segments=48):
 	cx, cy = center
 	coords = [(cx, cy)]
@@ -253,6 +261,9 @@ class HOLDHIDE_OT_modal_hide(bpy.types.Operator):
 		type(self)._active = False
 
 	def invoke(self, context, event):
+		if _is_text_edit_context(context):
+			return {"PASS_THROUGH"}
+
 		if type(self)._active:
 			return {"CANCELLED"}
 
@@ -275,6 +286,10 @@ class HOLDHIDE_OT_modal_hide(bpy.types.Operator):
 		return {"RUNNING_MODAL"}
 
 	def modal(self, context, event):
+		if _is_text_edit_context(context):
+			self._cleanup(context)
+			return {"PASS_THROUGH"}
+
 		if event.type == "MOUSEMOVE":
 			self._mouse = (event.mouse_region_x, event.mouse_region_y)
 			self._tag_redraw(context)
